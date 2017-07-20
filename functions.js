@@ -18,37 +18,31 @@ const maxLoop = 2;
 const AMD = false;
 // 呼び出し秒数
 const timeout = 10;
-// 通知メッセージ
+// メッセージ
 const message = "異常が発生いたしました。至急確認が必要です。";
 // Functionsのドメイン名
-const domain = "xxxxx-xxxxx-xxxx.twil.io";
+const domain = "xxxxxxx-xxxxxxxx-xxxx.twil.io";
 
 exports.handler = function(context, event, callback) {
   let idx = event.idx || 0; // インデックスパラメータを取得
-  let loop = event.loop || 1; // ループパラメータを取得
-  if (idx >= Object.keys(callList).length) {  // リストの最後まで到達
-    idx = 0;  // インデックスは0に戻す
-    if (loop >= maxLoop) { // ループ回数が最大値を超えたので終了
-      callback(null, "Call count was expired.")
-    } else {
-      loop++;  // ループ回数をインクリメント
-    }
-  }
-  let number = callList[Object.keys(callList)[idx]];  // 架電先をリストから取得
-  idx++;  // インデックスをインクリメント
+  let loop = event.loop || 0; // ループパラメータを取得
+  console.log('idx:' + idx + ', loop:' + loop);
 
+  let number = callList[Object.keys(callList)[idx]];  // 架電先をリストから取得
   let callStatus = event.CallStatus || '';  // コールステータス取得
   let answeredBy = event.AnsweredBy || ''; // 留守電応答チェック取得
   console.log('CallStatus:' + callStatus);
-  console.log('AnsweredBy:' + answeredBy);
+  if (AMD) {
+    console.log('AnsweredBy:' + answeredBy);
+  }
 
 // 架電するかをチェックする
   let fCall = false;  // 架電フラグ（true:する、false:しない）
 
   if (callStatus === 'in-progress') { // 応答あり
     if (AMD && /machine_start|fax/.test(answeredBy)) { // 人間以外が応答した場合
-        fCall = true;
-    } else {  // 人間が応答したと思われる場合
+      fCall = true;
+    } else {  // 人間が応答した場合
       let twiml = new Twilio.twiml.VoiceResponse()
       let sayParams = {
         language: 'ja-JP',
@@ -69,8 +63,21 @@ exports.handler = function(context, event, callback) {
     fCall = true;
   }
 
-// 架電作業
+  // ループチェック
+  if (loop >= maxLoop) { // ループ回数が最大値を超えたので終了
+    console.log("ループ回数を越えたので終了");
+    fCall = false;
+  }
+
+  // 架電作業
   if (fCall) {
+    // 次にかけるべき電話番号のidxとloop回数を設定
+    ++idx;	// インデックスをインクリメント
+    if (idx >= Object.keys(callList).length) {  // リストの最後まで到達
+      idx = 0;  // インデックスは0に戻す
+      ++loop;	// ループ回数をインクリメント
+    }
+    // 架電
     const client = context.getTwilioClient()
     client.calls.create({
       to: number,
