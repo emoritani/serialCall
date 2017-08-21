@@ -15,3 +15,4 @@
 ## 導入手順
 
 以下の記事を御覧ください。
+http://qiita.com/mobilebiz/items/caf5a4d1889da4cc8dfd
