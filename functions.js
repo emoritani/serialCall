@@ -20,8 +20,6 @@ const AMD = false;
 const timeout = 10;
 // メッセージ
 const message = "異常が発生いたしました。至急確認が必要です。";
-// Functionsのドメイン名
-const domain = "xxxxxxx-xxxxxxxx-xxxx.twil.io";
 
 exports.handler = function(context, event, callback) {
   let idx = event.idx || 0; // インデックスパラメータを取得
@@ -82,10 +80,10 @@ exports.handler = function(context, event, callback) {
     client.calls.create({
       to: number,
       from: callFrom,
-      url: 'https://'+domain+'/serialCall?idx='+idx+'&loop='+loop,
+      url: 'https://'+context.DOMAIN_NAME+'/serialCall?idx='+idx+'&loop='+loop,
       timeout: timeout,
       machineDetection: (AMD ? 'Enable' : ''),
-      statusCallback: 'https://'+domain+'/serialCall?idx='+idx+'&loop='+loop
+      statusCallback: 'https://'+context.DOMAIN_NAME+'/serialCall?idx='+idx+'&loop='+loop
     })
     .then((call) => {
       callback(null, "OK")
